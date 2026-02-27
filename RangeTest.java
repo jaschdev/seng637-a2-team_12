@@ -16,6 +16,13 @@ public class RangeTest {
     /*
      * SHIFT() TESTS
      */
+	    // Test shifting with Double.MAX_VALUE, allow zero crossing
+    @Test
+    public void testShiftMaxValueAllowZeroCross() {
+        Range shifted = Range.shift(exampleRange, Double.MAX_VALUE, true);
+        assertEquals(Double.MAX_VALUE, shifted.getLowerBound(), 0.000000001d);
+        assertEquals(Double.MAX_VALUE, shifted.getUpperBound(), 0.000000001d);
+    }
 
     // Robustness Test: base = null → expect NullPointerException
     @Test(expected = NullPointerException.class)
