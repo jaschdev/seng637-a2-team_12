@@ -14,9 +14,7 @@ public class RangeTest {
     }
 
     /*
-     * ============================
      * SHIFT() TESTS
-     * ============================
      */
 
     // Robustness Test: base = null → expect NullPointerException
@@ -61,9 +59,7 @@ public class RangeTest {
     }
 
     /*
-     * ============================
      * toString() TESTS
-     * ============================
      */
 
     // Weak ECP: normal positive range formatting
@@ -183,9 +179,7 @@ public class RangeTest {
    	}
    	
        /*
-        * ============================
         * CONTAINS(double) TESTS
-        * ============================
         */
    	
        // Weak ECP: value strictly inside range
@@ -224,9 +218,7 @@ public class RangeTest {
    	}
    	
        /*
-        * ============================
         * GETLENGTH() TESTS
-        * ============================
         */
 
        // Weak ECP: positive range
