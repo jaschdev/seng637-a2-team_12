@@ -11,11 +11,12 @@ import org.jfree.data.Values2D;
 import org.jfree.data.KeyedValues;
 import org.jmock.Mockery;
 import org.jmock.Expectations;
+import java.security.InvalidParameterException;
 
 
 
 
-public class DataUtilitiesTest extends DataUtilities {
+public class DataUtilitiesTest{
 	
 	private static final double EPS = 0.000000001d;
 	
@@ -26,6 +27,8 @@ public class DataUtilitiesTest extends DataUtilities {
 	    multiRowData.addValue(0,  "row2", "col0");
 	    multiRowData.addValue(2,  "row3", "col0");
 	    multiRowData.addValue(10, "row4", "col0");
+	    
+	    
 	    return multiRowData;
 	}
 	
@@ -38,13 +41,9 @@ public class DataUtilitiesTest extends DataUtilities {
 	
 
     // Test 1: Check for null input (not allowed)
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void createNumberArray2D_nullInput() {
-        
-    	try {
-            DataUtilities.createNumberArray2D(null);
-            fail("Expected IllegalArgumentException to be thrown");
-        } catch (IllegalArgumentException e) {}
+       DataUtilities.createNumberArray2D(null);      
     }
     
     
@@ -128,13 +127,10 @@ public class DataUtilitiesTest extends DataUtilities {
     
     
     // Test 1: null input (not allowed)
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void getCumulativePercentages_nullInput() {
-    	
-    	try {
-            DataUtilities.getCumulativePercentages(null);
-            fail("Expected IllegalArgumentException to be thrown");
-        } catch (IllegalArgumentException e) {}
+        DataUtilities.getCumulativePercentages(null);
+      
     }
     
     
@@ -251,7 +247,7 @@ public class DataUtilitiesTest extends DataUtilities {
         assertEquals(2, result.getItemCount());
         assertEquals(7.0/5.0, result.getValue(0).doubleValue(), EPS);        
         assertEquals(1.0, result.getValue(1).doubleValue(), EPS);
-
+ 
     }
     
     
@@ -278,243 +274,270 @@ public class DataUtilitiesTest extends DataUtilities {
 
     }
 	
-	@Test
-	public void testCalculateColumnTotalNullData() {
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		data.addValue(null, "row0", "col0");
-		data.addValue(null, "row0", "col0");
-		
-	    int column = 0;
+    // Weak ECP: one null cell in valid column → null ignored in sum
+    @Test(expected = IllegalArgumentException.class)
+    public void testCalculateColumnTotalNullData() {
 
-	    try {
-	    	double result = DataUtilities.calculateColumnTotal(data, column);
-	    	fail("expected some exception to be thrown due to not permitting null data");
-	    }
-	    catch(Exception e){
-	    	assertTrue(true);
-	    }
-	}
-	
-	@Test
-	public void testCalculateColumnTotalEmptyTable() {
-		
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		int column = 0;
-		
-		double result = DataUtilities.calculateColumnTotal(data, column);
-		
-		assertEquals(0.0, result, 0.0000001);
-	}
-	
-	@Test public void testCalculateColumnTotalSingleRow() {
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
 
-		double expected = 5;
-		int column = 0;
-		
-		double result = DataUtilities.calculateColumnTotal(createSingle(), column);
-		
-		System.out.println("results from testCalculateColumnTotalSingleRow:");
-		System.out.println(result);
-		
-		assertEquals(expected, result, 0.00001d);
-		
-	}
-	
-	@Test public void testCalculateColumnTotalMultipleRows() {
+        context.checking(new Expectations() {{
+            allowing(data).getRowCount(); will(returnValue(2));
+            allowing(data).getValue(0,0); will(returnValue(null));
+            allowing(data).getValue(1,0); will(returnValue(null));
+        }});
 
-		double expected = 1 + -1 + 0 + 2 + 10; //Hand calculated, the answer should be 12
-		
-		
-		int column = 0;
-		
-		double result = DataUtilities.calculateColumnTotal(createMulti(), column);
-		System.out.println("results from testCalculateColumnMultipleRows:");
-		System.out.println(result);
-		assertEquals(expected, result, 0.00001d);
-		
-	}
+        double result = DataUtilities.calculateColumnTotal(data, 0);
+    }
 	
-	
-	@Test 
-	public void testCalculateColumnTotalNegativeColumn() {
-		
-		int column = -1;
-		try {
-			double result = DataUtilities.calculateColumnTotal(createMulti(), column);
-			System.out.println("results from testCalculateColumnTotalSingleRow:");
-			System.out.println(result);
-			fail("expected some exception to be thrown");
-		}
-		catch(Exception e) {
-			assertTrue(true);
-		}
-		
-	}
-	
-	@Test 
-	public void testCalculateColumnTotalTooLarge() {
-		
-		int column = 2;
-		try {
-			double result = DataUtilities.calculateColumnTotal(createSingle(), column);
-			System.out.println("results from testCalculateColumnTooLarge:");
-			System.out.println(result);
-			fail("expected some exception to be thrown");
-		}
-		catch(Exception e) {
-			assertTrue(true);
-		}
-	}
-	
-	@Test
-	public void testCalculateRowTotalNullData() {
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		data.addValue(null, "row0", "col0");
-		data.addValue(null, "row0", "col1");
-		try {
-			double result = DataUtilities.calculateRowTotal(data, 0);
-		}
-		catch(Exception e) {
-			assertTrue(true);
-		}
-	}
-	
-	@Test
-	public void testCalculateRowTotalEmptyTable() {
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		
-		double result = DataUtilities.calculateRowTotal(data, 0);
-		
-		assertEquals(0.0, result, 0.0001d);
-	}
-	
-	@Test
-	public void testCalculateRowTotalSingleColumn() {
+    
+    // BVA: empty dataset → total should be zero
+    @Test
+    public void testCalculateColumnTotalEmptyTable() {
 
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		data.addValue(1, "row0", "col0");
-		data.addValue(0, "row1", "col0");
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
 
-		
-		double result = DataUtilities.calculateRowTotal(data, 0);
-		System.out.println("results from testCalculateRowTotalSingleColumn, output should be 1: ");
-		System.out.println(result);
-		
-		assertEquals(1, result, 0.0001d);
-	}
+        context.checking(new Expectations() {{
+            allowing(data).getRowCount(); will(returnValue(0));
+        }});
+
+        double result = DataUtilities.calculateColumnTotal(data, 0);
+
+        assertEquals(0.0, result, EPS);
+        context.assertIsSatisfied();
+    }
 	
-	@Test
-	public void testCalculateRowTotalMultipleColumns() {
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		data.addValue(3, "row0", "col0");
-		data.addValue(4, "row0", "col1");
-		data.addValue(5, "row0", "col2");
-		double expected = 3 + 4 + 5; //hand calculated to 12
-		
-		double result = DataUtilities.calculateRowTotal(data, 0);
-		System.out.println("testCalculateRowTotalMultipleColumns: expected value is 12 actual value is: ");
-		System.out.println(result);
-		assertEquals(12, result, 0.00001d);
-	}
+    // Weak ECP: single row positive value → total equals value
+    @Test
+    public void testCalculateColumnTotalSingleRow() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getRowCount(); will(returnValue(1));
+            allowing(data).getValue(0,0); will(returnValue(5));
+        }});
+
+        double result = DataUtilities.calculateColumnTotal(data, 0);
+
+        assertEquals(5.0, result, EPS);
+        context.assertIsSatisfied();
+    }
 	
-	@Test
-	public void testCalculateRowTotalNegativeRow() {
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		data.addValue(3, "row0", "col0");
-		data.addValue(4, "row0", "col1");
-		data.addValue(5, "row0", "col2");
-		double expected = 3 + 4 + 5; //hand calculated to 12
-		
-		try {
-		double result = DataUtilities.calculateRowTotal(data, -1);
-		System.out.println("testCalculateRowTotalMultipleColumns: expected value is 12 actual value is: ");
-		System.out.println(result);
-		}
-		catch(Exception e) {
-			assertTrue(true);
-		}
-	}
+ // Weak ECP: multiple valid values → total equals sum
+    @Test
+    public void testCalculateColumnTotalMultipleRows() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getRowCount(); will(returnValue(5));
+            allowing(data).getValue(0,0); will(returnValue(1));
+            allowing(data).getValue(1,0); will(returnValue(-1));
+            allowing(data).getValue(2,0); will(returnValue(0));
+            allowing(data).getValue(3,0); will(returnValue(2));
+            allowing(data).getValue(4,0); will(returnValue(10));
+        }});
+
+        double result = DataUtilities.calculateColumnTotal(data, 0);
+
+        assertEquals(12.0, result, EPS);
+        context.assertIsSatisfied();
+    }
 	
-	@Test
-	public void testCalculateRowTotalRowTooLarge() {
-		DefaultKeyedValues2D data = new DefaultKeyedValues2D();
-		data.addValue(3, "row0", "col0");
-		data.addValue(4, "row0", "col1");
-		data.addValue(5, "row0", "col2");
-		double expected = 3 + 4 + 5; //hand calculated to 12
-		
-		try {
-		double result = DataUtilities.calculateRowTotal(data, 1);
-		System.out.println("testCalculateRowTotalRowTooLarge: expected to fail but it did not");
-		System.out.println(result);
-		}
-		catch(Exception e) {
-			assertTrue(true);
-		}
-	}
 	
-	@Test
+    // Robustness: negative column index → expect exception
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testCalculateColumnTotalNegativeColumn() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getRowCount(); will(returnValue(1));
+            allowing(data).getValue(0,-1);
+            will(throwException(new IndexOutOfBoundsException()));
+        }});
+
+        DataUtilities.calculateColumnTotal(data, -1);
+    }
+	
+    // Robustness: column index out of bounds → expect exception
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testCalculateColumnTotal_TooLarge_Mocked() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getRowCount(); will(returnValue(1));
+            allowing(data).getValue(0,2);
+            will(throwException(new IndexOutOfBoundsException()));
+        }});
+
+        DataUtilities.calculateColumnTotal(data, 2);
+    }
+	
+    // Weak ECP: null values in row ignored
+    @Test(expected = IllegalArgumentException.class)
+    public void testCalculateRowTotalNullData() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getColumnCount(); will(returnValue(2));
+            allowing(data).getValue(0,0); will(returnValue(null));
+            allowing(data).getValue(0,1); will(returnValue(null));
+        }});
+
+        double result = DataUtilities.calculateRowTotal(data, 0);
+
+        assertEquals(0.0, result, EPS);
+        context.assertIsSatisfied();
+    }
+    
+    // Weak ECP: null values in row ignored
+    @Test(expected = NullPointerException.class)
+    public void testCalculateRowTotalNullArgument() {
+    
+    	double result = DataUtilities.calculateRowTotal(null, 0);
+    	
+    }
+	
+    // BVA: empty dataset → total should be zero
+    @Test
+    public void testCalculateRowTotalEmptyTable() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getColumnCount(); will(returnValue(0));
+        }});
+
+        double result = DataUtilities.calculateRowTotal(data, 0);
+
+        assertEquals(0.0, result, EPS);
+        context.assertIsSatisfied();
+    }
+    
+    // Weak ECP: single column positive value
+    @Test
+    public void testCalculateRowTotalSingleColumn() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getColumnCount(); will(returnValue(1));
+            allowing(data).getValue(0,0); will(returnValue(1));
+        }});
+
+        double result = DataUtilities.calculateRowTotal(data, 0);
+
+        assertEquals(1.0, result, EPS);
+        context.assertIsSatisfied();
+    }
+    
+	
+    // Weak ECP: multiple positive values → total equals sum
+    @Test
+    public void testCalculateRowTotalMultipleColumns() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getColumnCount(); will(returnValue(3));
+            allowing(data).getValue(0,0); will(returnValue(3));
+            allowing(data).getValue(0,1); will(returnValue(4));
+            allowing(data).getValue(0,2); will(returnValue(5));
+        }});
+
+        double result = DataUtilities.calculateRowTotal(data, 0);
+
+        assertEquals(12.0, result, EPS);
+        context.assertIsSatisfied();
+    }
+	
+    // Robustness: negative row index → expect exception
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testCalculateRowTotalNegativeRow() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getColumnCount(); will(returnValue(1));
+            allowing(data).getValue(-1,0);
+            will(throwException(new IndexOutOfBoundsException()));
+        }});
+
+        DataUtilities.calculateRowTotal(data, -1);
+    }
+	
+    // Robustness: row index out of bounds → expect exception
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testCalculateRowTotalRowTooLarge() {
+
+        Mockery context = new Mockery();
+        final Values2D data = context.mock(Values2D.class);
+
+        context.checking(new Expectations() {{
+            allowing(data).getColumnCount(); will(returnValue(1));
+            allowing(data).getValue(1,0);
+            will(throwException(new IndexOutOfBoundsException()));
+        }});
+
+        DataUtilities.calculateRowTotal(data, 1);
+    }
+	
+    // Weak ECP: null input (invalid equivalence class)
+	@Test (expected = IllegalArgumentException.class)
 	public void testCreateNumberArrayNull() {
-		//null not permitted
-		try {
-		
-			Number[] data = DataUtilities.createNumberArray(null);
-			fail("the data array was created when an error should have been thrown");
-		}
-		catch(Exception e) {
-			assertTrue(true);
-		}
-	
-		
+		//null not permitted		
+		Number[] data = DataUtilities.createNumberArray(null);	
 	}
 	
+    // Boundary Value: empty array input (size = 0)
 	@Test
 	public void testCreateNumberArrayEmpty() {
 		double[] emptyArray = {};
-		try {
-			Number[] data = DataUtilities.createNumberArray(emptyArray);
-			int len = data.length;
-			//make sure number array has length of 0
-			assertEquals(0,len, 0.0001d);
-		}
-		catch (Exception e) {
-			//array creation failed
-			assertTrue(false);
-		}
+	
+		Number[] data = DataUtilities.createNumberArray(emptyArray);
+		int len = data.length;
+		//make sure number array has length of 0
+		assertEquals(0,len, 0.0001d);
+
 		
 		
 	}
 	
+    // Boundary Value: single element input (size = 1)
 	@Test
 	public void testCreateNumberArraySingleValue() {
 		double[] singleValueArray = {1};
-		try {
-			Number[] data = DataUtilities.createNumberArray(singleValueArray);
-			int len = data.length;
-			//make sure number array has length of 1
-			assertEquals(1, len, 0.0001d);
-		}
-		catch (Exception e) {
-			//array creation failed
-			assertTrue(false);
-		}
+
+		Number[] data = DataUtilities.createNumberArray(singleValueArray);
+		int len = data.length;
+		//make sure number array has length of 1
+		assertEquals(1, len, 0.0001d);
+	
 	}
 	
+    // Weak ECP: valid multi-element input array
 	@Test
 	public void testCreateNumberArrayMultipleValues() {
 		double[] singleValueArray = {1, 2 , 3};
-		try {
-			Number[] data = DataUtilities.createNumberArray(singleValueArray);
-			int len = data.length;
-			//make sure that number array has length of 3
-			assertEquals(3, len, 0.0001d);
-		}
-		catch (Exception e) {
-			//array creation failed
-			assertTrue(false);
-		}
+		
+		Number[] data = DataUtilities.createNumberArray(singleValueArray);
+		int len = data.length;
+		//make sure that number array has length of 3
+		assertEquals(3, len, 0.0001d);
 	}
-
-
 
 }
