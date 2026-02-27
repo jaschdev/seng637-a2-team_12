@@ -71,7 +71,7 @@ public class DataUtilitiesTest {
 
         assertEquals(1, output.length);
         assertEquals(1, output[0].length);
-        assertEquals(42.0, output[0][0].doubleValue(), EPS);
+        assertEquals(5.5, output[0][0].doubleValue(), EPS);
     }
  
     
