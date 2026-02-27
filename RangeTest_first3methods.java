@@ -23,28 +23,51 @@ public class RangeTest_first3methods {
 		Range result = Range.combine(null, null);
 		assertNull(result);
 	}
-
-    // Weak ECP: one range fully contained inside the other
+	
+    // Weak ECP: first parameter null → return second range
 	@Test
-	public void testCombineContained() {
-		Range r1 = new Range(1.0, 10.0);
-		Range r2 = new Range(3.0, 4.0);
+	public void testCombineFirstNull() {
+		Range r2 = new Range(1.0, 5.0);
+
+		Range result = Range.combine(null, r2);
+
+		assertEquals(r2.getLowerBound(), result.getLowerBound(), 0.000000001d);
+		assertEquals(r2.getUpperBound(), result.getUpperBound(), 0.000000001d);
+	}
+	
+    // Weak ECP: second parameter null → return first range
+	@Test
+	public void testCombineSecondNull() {
+		Range r1 = new Range(-3.0, 2.0);
+
+		Range result = Range.combine(r1, null);
+
+		assertEquals(r1.getLowerBound(), result.getLowerBound(), 0.000000001d);
+		assertEquals(r1.getUpperBound(), result.getUpperBound(), 0.000000001d);
+	}
+	
+    // Weak ECP: partially overlapping ranges
+	@Test
+	public void testCombineOverlapping() {
+		Range r1 = new Range(1.0, 5.0);
+		Range r2 = new Range(3.0, 8.0);
 
 		try {
-
 			Range result = Range.combine(r1, r2);
 
 			assertNotNull("Result should not be null", result);
 			assertEquals(1.0, result.getLowerBound(), 0.000000001d);
-			assertEquals(10.0, result.getUpperBound(), 0.000000001d);
+			assertEquals(8.0, result.getUpperBound(), 0.000000001d);
 
+			// SUT fails here, tries to create new Range(1.0, 3.0), results in an error
+			// because assertions don't execute.
 			// Added assertNotNull() to catch this error, and result in the test failure
 
 		} catch (IllegalArgumentException e) {
 			fail("combine() should not throw exception for overlapping ranges");
 		}
 	}
-
+	
     // Weak ECP: disjoint non-overlapping ranges
 	@Test
 	public void testCombineDisjoint() {
@@ -67,50 +90,26 @@ public class RangeTest_first3methods {
 			fail("combine() should not throw exception for overlapping ranges");
 		}
 	}
-	
-    // Weak ECP: first parameter null → return second range
-	@Test
-	public void testCombineFirstNull() {
-		Range r2 = new Range(1.0, 5.0);
-
-		Range result = Range.combine(null, r2);
-
-		assertEquals(r2.getLowerBound(), result.getLowerBound(), 0.000000001d);
-		assertEquals(r2.getUpperBound(), result.getUpperBound(), 0.000000001d);
-	}
     
-    // Weak ECP: partially overlapping ranges
+    // Weak ECP: one range fully contained inside the other
 	@Test
-	public void testCombineOverlapping() {
-		Range r1 = new Range(1.0, 5.0);
-		Range r2 = new Range(3.0, 8.0);
+	public void testCombineContained() {
+		Range r1 = new Range(1.0, 10.0);
+		Range r2 = new Range(3.0, 4.0);
 
 		try {
+
 			Range result = Range.combine(r1, r2);
 
 			assertNotNull("Result should not be null", result);
 			assertEquals(1.0, result.getLowerBound(), 0.000000001d);
-			assertEquals(8.0, result.getUpperBound(), 0.000000001d);
+			assertEquals(10.0, result.getUpperBound(), 0.000000001d);
 
-			// SUT fails here, tries to create new Range(1.0, 3.0), results in an error
-			// because assertions don't execute.
 			// Added assertNotNull() to catch this error, and result in the test failure
 
 		} catch (IllegalArgumentException e) {
 			fail("combine() should not throw exception for overlapping ranges");
 		}
-
-	}
-	
-    // Weak ECP: second parameter null → return first range
-	@Test
-	public void testCombineSecondNull() {
-		Range r1 = new Range(-3.0, 2.0);
-
-		Range result = Range.combine(r1, null);
-
-		assertEquals(r1.getLowerBound(), result.getLowerBound(), 0.000000001d);
-		assertEquals(r1.getUpperBound(), result.getUpperBound(), 0.000000001d);
 	}
 	
     /*
@@ -119,18 +118,11 @@ public class RangeTest_first3methods {
      * ============================
      */
 	
-    // Boundary Value Analysis: value above upper bound
+    // Weak ECP: value strictly inside range
 	@Test
-	public void testContainsAboveUpper() {
+	public void testContainsValueInside() {
 		Range r = new Range(1.0, 5.0);
-		assertFalse(r.contains(6.0));
-	}
-	
-    // Boundary Value Analysis: value below lower bound
-	@Test
-	public void testContainsBelowLower() {
-		Range r = new Range(1.0, 5.0);
-		assertFalse(r.contains(0.5));
+		assertTrue(r.contains(3.0));
 	}
 	
     // Boundary Value Analysis: value equals lower boundary
@@ -147,11 +139,18 @@ public class RangeTest_first3methods {
 		assertTrue(r.contains(5.0));
 	}
 	
-    // Weak ECP: value strictly inside range
+    // Boundary Value Analysis: value below lower bound
 	@Test
-	public void testContainsValueInside() {
+	public void testContainsBelowLower() {
 		Range r = new Range(1.0, 5.0);
-		assertTrue(r.contains(3.0));
+		assertFalse(r.contains(0.5));
+	}
+	
+    // Boundary Value Analysis: value above upper bound
+	@Test
+	public void testContainsAboveUpper() {
+		Range r = new Range(1.0, 5.0);
+		assertFalse(r.contains(6.0));
 	}
 	
     /*
@@ -159,13 +158,6 @@ public class RangeTest_first3methods {
      * GETLENGTH() TESTS
      * ============================
      */
-	
-    // Weak ECP: both bounds negative
-	@Test
-	public void testGetLengthNegativeBounds() {
-		Range r = new Range(-5.0, -2.0);
-		assertEquals(3.0, r.getLength(), 0.000000001d);
-	}
 
     // Weak ECP: positive range
 	@Test
@@ -179,6 +171,13 @@ public class RangeTest_first3methods {
 	public void testGetLengthZeroLength() {
 		Range r = new Range(3.0, 3.0);
 		assertEquals(0.0, r.getLength(), 0.000000001d);
+	}
+	
+    // Weak ECP: both bounds negative
+	@Test
+	public void testGetLengthNegativeBounds() {
+		Range r = new Range(-5.0, -2.0);
+		assertEquals(3.0, r.getLength(), 0.000000001d);
 	}
 	
     @After
