@@ -6,7 +6,6 @@ import org.jfree.data.DataUtilities;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.Before;
-import org.jfree.data.DefaultKeyedValues2D;
 import org.jfree.data.Values2D;
 import org.jfree.data.KeyedValues;
 import org.jmock.Mockery;
@@ -20,25 +19,7 @@ public class DataUtilitiesTest{
 	
 	private static final double EPS = 0.000000001d;
 	
-	private DefaultKeyedValues2D createMulti() {
-		DefaultKeyedValues2D multiRowData = new DefaultKeyedValues2D();
-	    multiRowData.addValue(1,  "row0", "col0");
-	    multiRowData.addValue(-1, "row1", "col0");
-	    multiRowData.addValue(0,  "row2", "col0");
-	    multiRowData.addValue(2,  "row3", "col0");
-	    multiRowData.addValue(10, "row4", "col0");
-	    
-	    
-	    return multiRowData;
-	}
-	
-	private DefaultKeyedValues2D createSingle() {
-		DefaultKeyedValues2D singleRowData = new DefaultKeyedValues2D();
-		singleRowData.addValue(5,"row0", "col0");
-		
-		return singleRowData;
-	}
-	
+
 
     // Test 1: Check for null input (not allowed)
     @Test(expected = IllegalArgumentException.class)
