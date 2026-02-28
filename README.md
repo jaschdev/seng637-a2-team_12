@@ -2,3 +2,5 @@
 # SENG637-Assignment 2
 
 Read [the assignment guideline](seng637-a2.md)
+
+The eclipse project is named "testSuite" and can be imported into eclipse and run without any extra java imports. 
