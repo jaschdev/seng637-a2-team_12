@@ -141,6 +141,12 @@ This section presents the concrete JUnit test cases developed based on the unit 
 
 The five methods from the JFreeChart Range class were selected because they collectively represent a diverse set of behaviours: object interaction (`combine`), simple boolean evaluation (`contains`), numerical computation (`getLength`), state transformation with conditional logic (`shift`), and string representation (`toString`). Together, these methods cover scalar inputs, object interactions, boundary sensitive logic, and special case handling (e.g., null parameters and zero crossing behaviour). This variety allows for meaningful application of equivalence class partitioning, boundary value analysis, robustness testing, and interaction-based testing within a manageable subset of the class’s functionality.
 
+# Mocking in Testing
+
+A benefit of using mocking is that it help isolate the SUT. By replacing external dependencies with mock versions, a smaller chunk of code can be independently tested. Any failure in the test would be due to the SUT and not a dependency. Additionally, Mocking helps reduce test execution speed. The testing suite does not have to wait for external services to be called and a result to come back. Assuming a lot of tests are being automated, this would reduce the execution time substantially.
+
+A drawback of using mocking is that the mocked version may not perfectly imitate the real-life dependency. This could result in false positives in testing. When the SUT is connected to the actual SUT it may fail. On top of this, mocking increases test development time. A software tester has to spend time writing a mock, often many depending on the SUT. Also if any dependent modules are added later further mocks must be created. 
+
 # Table 3: Range Class Test Cases
 
 | Test Method Name | Source Method | Partition Covered | Technique Used | Expected Outcome |
